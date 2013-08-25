@@ -47,6 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FtpClient.cs" />
     <Compile Include="DebugWindow.cs">
       <SubType>Form</SubType>
     </Compile>

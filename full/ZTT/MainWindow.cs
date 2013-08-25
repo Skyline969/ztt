@@ -284,7 +284,7 @@ namespace ZTT
             if (lstFiles.SelectedItems.Count == 1 && lastButtonUp == MouseButtons.Left)
             {
                 debugWindow("Double-click event on lstFiles, exactly 1 item was selected.");
-                if (isFTPDir(ftpPath + lstFiles.SelectedItems[0].Text))
+                if (ftpIsDir(ftpPath + lstFiles.SelectedItems[0].Text))
                 {
                     debugWindow("Item double-clicked in lstFiles was a folder.");
                     if (checkConnectivity())
@@ -331,7 +331,7 @@ namespace ZTT
                 debugWindow("Calling getDirList.\nSetting ftpInProgress to true.");
                 ftpInProgress = true;
                 FTPParams parameters = e.Argument as FTPParams;
-                e.Result = getDirList(parameters);
+                e.Result = ftpGetDirList(parameters);
             }
             else
             {
@@ -371,7 +371,7 @@ namespace ZTT
                         debugWindow("\tOPK");
                         item.ImageIndex = 2;
                     }
-                    else if (isFTPDir(ftpPath + file))
+                    else if (ftpIsDir(ftpPath + file))
                     {
                         debugWindow("\tDirectory");
                         item.ImageIndex = 0;
@@ -486,7 +486,7 @@ namespace ZTT
 
         #region FTP Dir Functions
 
-        public bool isFTPDir(string path)
+        public bool ftpIsDir(string path)
         {
             debugWindow("isFTPDir called for " + path);
             bool IsExists = false;
@@ -562,7 +562,7 @@ namespace ZTT
             }
         }
 
-        public long getFileSize(FTPParams parameters)
+        public long ftpGetFileSize(FTPParams parameters)
         {
             debugWindow("getFileSize called.");
             FtpWebRequest reqSize = (FtpWebRequest)FtpWebRequest.Create(new Uri("ftp://" + parameters.address + parameters.file));
@@ -580,7 +580,7 @@ namespace ZTT
             return size;
         }
 
-        public List<string> getDirList(FTPParams parameters, bool recursive = false)
+        public List<string> ftpGetDirList(FTPParams parameters, bool recursive = false)
         {
             debugWindow("getDirList called");
             StringBuilder result = new StringBuilder();
@@ -605,13 +605,13 @@ namespace ZTT
                     while (line != null)
                     {
                         items.Add(parameters.root + line);
-                        if (isFTPDir(parameters.root + line))
+                        if (ftpIsDir(parameters.root + line))
                         {
                             debugWindow("\tRecursing into " + parameters.root + line + "/");
                             string tmpRoot = parameters.root;
                             parameters.root = parameters.root + line + "/";
 
-                            items.AddRange(getDirList(parameters, true));
+                            items.AddRange(ftpGetDirList(parameters, true));
 
                             parameters.root = tmpRoot;
                         }
@@ -654,7 +654,7 @@ namespace ZTT
                     string line = reader.ReadLine();
                     while (line != null)
                     {
-                        if (isFTPDir(parameters.root + line))
+                        if (ftpIsDir(parameters.root + line))
                         {
                             debugWindow("\tAdding folder " + line);
                             folders.Add(line);
@@ -726,7 +726,7 @@ namespace ZTT
             }
         }
 
-        private void downloadFile(FTPParams parameters, string location)
+        private void ftpDownloadFile(FTPParams parameters, string location)
         {
             debugWindow("downloadFile called. Saving " + parameters.file + " to " + location);
             FtpWebRequest ftp = (FtpWebRequest)WebRequest.Create(new Uri("ftp://" + parameters.address + parameters.file));
@@ -740,7 +740,7 @@ namespace ZTT
             byte[] buffer = new byte[2048];
 
             prgCurrentItem.Minimum = 0;
-            prgCurrentItem.Maximum = Convert.ToInt32(getFileSize(parameters));
+            prgCurrentItem.Maximum = Convert.ToInt32(ftpGetFileSize(parameters));
             prgCurrentItem.Value = 0;
             prgCurrentItem.Step = buffer.Length;
 
@@ -764,7 +764,7 @@ namespace ZTT
             response.Close();
         }
 
-        private void uploadFile(string location, FTPParams parameters)
+        private void ftpUploadFile(string location, FTPParams parameters)
         {
             debugWindow("uploadFile called. Saving " + parameters.file + " to ftp://" + parameters.address + location + Path.GetFileName(parameters.file));
             
@@ -787,6 +787,11 @@ namespace ZTT
             FtpWebResponse response = (FtpWebResponse)ftp.GetResponse();
 
             response.Close();
+        }
+
+        private void ftpCreateDirectory(string dir)
+        {
+            debugWindow("ftpCreateDirectory called. Creating " + dir);
         }
 
         private void downloadFiles()
@@ -831,7 +836,7 @@ namespace ZTT
                             foreach (string item in selectedItems.ToList<string>())
                             {
                                 debugWindow("\tProcessing " + item);
-                                if (isFTPDir(item))
+                                if (ftpIsDir(item))
                                 {
                                     debugWindow("\t\tIs a directory.");
                                     FTPParams recParams = new FTPParams
@@ -842,7 +847,7 @@ namespace ZTT
                                         navOut = false
                                     };
                                     ftpInProgress = true;
-                                    List<string> subitems = getDirList(recParams, true);
+                                    List<string> subitems = ftpGetDirList(recParams, true);
                                     ftpInProgress = false;
                                     foreach (string subitem in subitems)
                                     {
@@ -887,7 +892,7 @@ namespace ZTT
                                         break; // Handled outside of the following switch statement to break out of the foreach
                                     }
 
-                                    if (isFTPDir(item))
+                                    if (ftpIsDir(item))
                                     {
                                         debugWindow("\t\tIs a directory.");
                                         if (!Directory.Exists(fbd.SelectedPath + "\\" + tmpLine))
@@ -925,7 +930,7 @@ namespace ZTT
                                                 ftpInProgress = true;
                                                 try
                                                 {
-                                                    downloadFile(dwnParams, fbd.SelectedPath + "\\" + tmpLine);
+                                                    ftpDownloadFile(dwnParams, fbd.SelectedPath + "\\" + tmpLine);
                                                 }
                                                 catch (Exception ex)
                                                 {
@@ -973,7 +978,7 @@ namespace ZTT
                                                         ftpInProgress = true;
                                                         try
                                                         {
-                                                            downloadFile(dwnParams, fbd.SelectedPath + "\\" + tmpLine);
+                                                            ftpDownloadFile(dwnParams, fbd.SelectedPath + "\\" + tmpLine);
                                                         }
                                                         catch (Exception ex)
                                                         {
@@ -999,7 +1004,7 @@ namespace ZTT
                                             ftpInProgress = true;
                                             try
                                             {
-                                                downloadFile(dwnParams, fbd.SelectedPath + "\\" + tmpLine);
+                                                ftpDownloadFile(dwnParams, fbd.SelectedPath + "\\" + tmpLine);
                                             }
                                             catch (Exception ex)
                                             {
@@ -1101,7 +1106,7 @@ namespace ZTT
                                         ftpInProgress = true;
                                         try
                                         {
-                                            uploadFile(ftpPath, uplParams);
+                                            ftpUploadFile(ftpPath, uplParams);
                                         }
                                         catch (Exception ex)
                                         {
@@ -1141,7 +1146,7 @@ namespace ZTT
                                                 ftpInProgress = true;
                                                 try
                                                 {
-                                                    uploadFile(ftpPath, uplParams);
+                                                    ftpUploadFile(ftpPath, uplParams);
                                                 }
                                                 catch (Exception ex)
                                                 {
@@ -1158,7 +1163,7 @@ namespace ZTT
                             else
                             {
                                 setStatus("Uploading " + file);
-                                uploadFile(ftpPath, uplParams);
+                                ftpUploadFile(ftpPath, uplParams);
                             }
                         }
                     }
