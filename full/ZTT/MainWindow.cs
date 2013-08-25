@@ -1033,7 +1033,6 @@ namespace ZTT
             }
         }
 
-        //NOTE: STILL BROKEN, SKIP/OVERWRITE ALL NOT WORKING!
         private void uploadFiles()
         {
             if (checkConnectivity() && ftpPath != null && ftpPath != "")
@@ -1053,8 +1052,17 @@ namespace ZTT
                     bool overwriteAll = false;
                     bool skipAll = false;
 
+                    debugWindow("\n\nTotal files to upload: " + ofd.FileNames.Count());
+                    int fileProg = 0;
+
                     foreach (string file in ofd.FileNames)
                     {
+                        fileProg++;
+                        debugWindow("Processing file " + fileProg + " of " + ofd.FileNames.Count());
+                        debugWindow("Incrementing the total progress bar.");
+                        prgTotalProgress.PerformStep();
+                        prgTotalProgress.Refresh();
+
                         if (overwrite == OverwriteDialogResponse.Cancel)
                         {
                             debugWindow("\t\toverwrite is set to Cancel, breaking out of foreach loop.");
@@ -1062,11 +1070,13 @@ namespace ZTT
                             prgTotalProgress.Refresh();
                             prgCurrentItem.Value = prgCurrentItem.Maximum;
                             prgCurrentItem.Refresh();
+                            debugWindow("Calling break on foreach.");
                             break; // Handled outside of the following switch statement to break out of the foreach
                         }
 
                         if (!Directory.Exists(file))
                         {
+                            debugWindow(file + " is not a directory.");
                             FTPParams uplParams = new FTPParams
                             {
                                 address = FTP_ADDR,
@@ -1075,66 +1085,73 @@ namespace ZTT
                                 navOut = true
                             };
 
-                            if (ftpFileExists(FTP_ADDR + ftpPath + Path.GetFileName(file)) && !skipAll)
+                            if (ftpFileExists(FTP_ADDR + ftpPath + Path.GetFileName(file)))
                             {
-                                debugWindow("\t\tFile exists and skipAll is false.");
-                                if (overwriteAll)
+                                if (skipAll)
                                 {
-                                    debugWindow("\t\toverwriteAll selected. Proceeding to download file.");
-
-                                    ftpInProgress = true;
-                                    try
-                                    {
-                                        uploadFile(ftpPath, uplParams);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        debugWindow(ex.Message + "\n" + ex.GetType() + "\n" + ex.StackTrace);
-                                        MessageBox.Show(ex.Message + "\n" + ex.GetType() + "\n" + ex.StackTrace);
-                                    }
-                                    ftpInProgress = false;
+                                    debugWindow("File exists. Skip all selected. Not uploading " + file);
                                 }
                                 else
                                 {
-                                    debugWindow("\t\tAsking user what to do with file.");
-                                    OverwriteDialog od = new OverwriteDialog("The file " + uplParams.root + Path.GetFileName(uplParams.file) + " already exists." +
-                                        Environment.NewLine + Environment.NewLine + "Overwrite?");
-                                    od.ShowDialog();
-                                    overwrite = od.Result;
-
-                                    debugWindow("\t\tGot result " + overwrite);
-                                    switch (overwrite)
+                                    debugWindow("\t\tFile exists and skipAll is false.");
+                                    if (overwriteAll)
                                     {
-                                        case OverwriteDialogResponse.SkipAll:
-                                            debugWindow("\t\t\tSkipAll selected. Setting skipAll to true.");
-                                            skipAll = true;
-                                            continue;
-                                        case OverwriteDialogResponse.Skip:
-                                            debugWindow("\t\t\tSkip selected.");
-                                            continue;
-                                        case OverwriteDialogResponse.Cancel:
-                                            debugWindow("\t\t\tCancel selected.");
-                                            debugWindow("\t\t\tCalling break.");
-                                            break; // Handled elsewhere in the code
-                                        case OverwriteDialogResponse.OverwriteAll:
-                                            debugWindow("\t\t\tOverwriteAll selected. Setting overwriteAll to true.");
-                                            overwriteAll = true;
-                                            continue;
-                                        case OverwriteDialogResponse.Overwrite:
-                                            debugWindow("\t\t\tOverwriting.");
-                                            ftpInProgress = true;
-                                            try
-                                            {
-                                                uploadFile(ftpPath, uplParams);
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                debugWindow(ex.Message + "\n" + ex.GetType() + "\n" + ex.StackTrace);
-                                                MessageBox.Show(ex.Message + "\n" + ex.GetType() + "\n" + ex.StackTrace);
-                                            }
-                                            ftpInProgress = false;
-                                            debugWindow("\t\t\tCalling break.");
-                                            break;
+                                        debugWindow("\t\toverwriteAll selected. Proceeding to download file.");
+
+                                        ftpInProgress = true;
+                                        try
+                                        {
+                                            uploadFile(ftpPath, uplParams);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            debugWindow(ex.Message + "\n" + ex.GetType() + "\n" + ex.StackTrace);
+                                            MessageBox.Show(ex.Message + "\n" + ex.GetType() + "\n" + ex.StackTrace);
+                                        }
+                                        ftpInProgress = false;
+                                    }
+                                    else
+                                    {
+                                        debugWindow("\t\tAsking user what to do with file.");
+                                        OverwriteDialog od = new OverwriteDialog("The file " + uplParams.root + Path.GetFileName(uplParams.file) + " already exists." +
+                                            Environment.NewLine + Environment.NewLine + "Overwrite?");
+                                        od.ShowDialog();
+                                        overwrite = od.Result;
+
+                                        debugWindow("\t\tGot result " + overwrite);
+                                        switch (overwrite)
+                                        {
+                                            case OverwriteDialogResponse.SkipAll:
+                                                debugWindow("\t\t\tSkipAll selected. Setting skipAll to true.");
+                                                skipAll = true;
+                                                continue;
+                                            case OverwriteDialogResponse.Skip:
+                                                debugWindow("\t\t\tSkip selected.");
+                                                continue;
+                                            case OverwriteDialogResponse.Cancel:
+                                                debugWindow("\t\t\tCancel selected.");
+                                                debugWindow("\t\t\tCalling break.");
+                                                break; // Handled elsewhere in the code
+                                            case OverwriteDialogResponse.OverwriteAll:
+                                                debugWindow("\t\t\tOverwriteAll selected. Setting overwriteAll to true.");
+                                                overwriteAll = true;
+                                                continue;
+                                            case OverwriteDialogResponse.Overwrite:
+                                                debugWindow("\t\t\tOverwriting.");
+                                                ftpInProgress = true;
+                                                try
+                                                {
+                                                    uploadFile(ftpPath, uplParams);
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    debugWindow(ex.Message + "\n" + ex.GetType() + "\n" + ex.StackTrace);
+                                                    MessageBox.Show(ex.Message + "\n" + ex.GetType() + "\n" + ex.StackTrace);
+                                                }
+                                                ftpInProgress = false;
+                                                debugWindow("\t\t\tCalling break.");
+                                                break;
+                                        }
                                     }
                                 }
                             }
@@ -1144,8 +1161,6 @@ namespace ZTT
                                 uploadFile(ftpPath, uplParams);
                             }
                         }
-                        prgTotalProgress.PerformStep();
-                        prgTotalProgress.Refresh();
                     }
                     setStatus("Upload complete.");
                     refreshFileList();

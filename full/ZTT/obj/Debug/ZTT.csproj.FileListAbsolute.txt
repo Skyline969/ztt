@@ -20,3 +20,14 @@ E:\Dropbox\C#\ZTT\ZTT\ZTT\obj\Debug\ZTT.frmMain.resources
 E:\Dropbox\C#\ZTT\ZTT\ZTT\obj\Debug\ZTT.OverwriteDialog.resources
 E:\Dropbox\C#\ZTT\ZTT\ZTT\obj\Debug\ZTT.Properties.Resources.resources
 E:\Dropbox\C#\ZTT\ZTT\ZTT\obj\Debug\ZTT.csproj.GenerateResource.Cache
+D:\Dropbox\GitHub\ztt\full\ZTT\bin\Debug\ZTT.exe.config
+D:\Dropbox\GitHub\ztt\full\ZTT\obj\Debug\ZTT.exe
+D:\Dropbox\GitHub\ztt\full\ZTT\obj\Debug\ZTT.pdb
+D:\Dropbox\GitHub\ztt\full\ZTT\bin\Debug\ZTT.exe
+D:\Dropbox\GitHub\ztt\full\ZTT\bin\Debug\ZTT.pdb
+D:\Dropbox\GitHub\ztt\full\ZTT\obj\Debug\ZTT.csprojResolveAssemblyReference.cache
+D:\Dropbox\GitHub\ztt\full\ZTT\obj\Debug\ZTT.DebugWindow.resources
+D:\Dropbox\GitHub\ztt\full\ZTT\obj\Debug\ZTT.frmMain.resources
+D:\Dropbox\GitHub\ztt\full\ZTT\obj\Debug\ZTT.OverwriteDialog.resources
+D:\Dropbox\GitHub\ztt\full\ZTT\obj\Debug\ZTT.Properties.Resources.resources
+D:\Dropbox\GitHub\ztt\full\ZTT\obj\Debug\ZTT.csproj.GenerateResource.Cache
